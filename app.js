@@ -243,7 +243,7 @@ function renderCase(item) {
   `;
 }
 
-function renderCases(task = "all") {
+function renderCases(task = "keep_quantity_partial_changes") {
   const target = document.getElementById("case-list");
   const data = window.CLA_SVS_DEMO_DATA;
 
@@ -368,4 +368,12 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAudioExclusivity();
   setupFigures();
   renderCases();
+});
+
+document.querySelectorAll('[data-song]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('#real-world audio').forEach(audio => audio.pause());
+    document.querySelectorAll('[data-song]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    document.querySelectorAll('.real-world-case').forEach(item => { item.hidden = item.id !== `song-${button.dataset.song}`; });
+  });
 });

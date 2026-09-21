@@ -2646,3 +2646,65 @@ footer > p {
     grid-row: 1 / 3;
   }
 }
+
+/* Compact submission page: explicit contrast and focused content. */
+[hidden] { display: none !important; }
+.hero { min-height: 0; display: block; padding: 116px max(28px, calc((100vw - 1120px)/2)) 42px; }
+.hero h1 { font-size: clamp(36px, 4.4vw, 60px); line-height: 1.08; margin: 16px 0; }
+.hero h1 .method-name { font-size: 25px; }
+.hero-summary { max-width: 740px; font-size: 17px; line-height: 1.55; }
+.hero-actions { margin-top: 22px; }
+.section { max-width: 1180px; padding: 40px 30px; margin: 0 auto; }
+.section-heading { margin-bottom: 22px; }
+.section-heading h2 { font-size: clamp(26px, 3vw, 36px); }
+.split-heading { gap: 28px; }
+.section-heading p { font-size: 16px; line-height: 1.6; }
+.section-index { font-size: 12px !important; }
+.real-world-section, .results-section { max-width: none; padding-left: max(28px, calc((100vw - 1120px)/2)); padding-right: max(28px, calc((100vw - 1120px)/2)); }
+.song-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.song-tabs button { padding: 10px 22px; color: #192e3b; background: #fff; border: 1px solid #8496a0; border-radius: 6px; cursor: pointer; font-size: 17px; }
+.song-tabs button[aria-pressed=true] { color: #fff; background: #075a88; border-color: #075a88; }
+.real-world-case, .real-world-case + .real-world-case { margin: 0; }
+.real-world-header { display: block; padding: 20px 24px 12px; }
+.real-world-header h3 { font-size: 26px; }
+.real-world-header > div:first-child > p:last-child { max-width: none; font-size: 15px; margin: 8px 0; }
+.real-world-listen { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.listen-card { padding: 18px; }
+.listen-card > div { min-height: 48px; }
+.listen-card strong { font-size: 16px; }
+.lyric-details { border-top: 1px solid #b8c6cc; }
+.lyric-details summary { cursor: pointer; font-size: 16px; font-weight: 600; padding: 16px 24px; color: #17405a; }
+.real-world-lyrics { padding: 0 20px 20px; }
+.method-section .paper-figure { max-width: 780px; margin: 18px auto 0; }
+.paper-figure { margin: 22px 0; }
+.figure-button { padding: 12px; background: #fff; }
+.figure-button img { max-height: 380px; width: 100%; object-fit: contain; }
+.paper-figure figcaption { font-size: 14px; line-height: 1.55; margin-top: 10px; }
+.results-section { background: #f3f1ea; color: #14252e; }
+.results-section .split-heading > p { color: #45565e; }
+.results-section .section-index { color: #075a88; }
+.table-card { color: #14252e; background: #fff; border: 1px solid #b8c6cc; margin: 18px 0; border-radius: 8px; overflow: hidden; }
+.table-title { min-height: 0; padding: 16px 20px; border-color: #cbd5da; }
+.table-title h3 { color: #14252e; font-family: inherit; font-size: 21px; margin: 0; font-weight: 650; }
+.table-card table { min-width: 540px; }
+.table-card th, .table-card td { font-size: 17px; padding: 13px 16px; color: #14252e; border-color: #d8e0e4; }
+.table-card thead th { font-size: 14px; color: #344b58; background: #edf2f5; letter-spacing: 0; text-transform: none; }
+.table-card tbody th { min-width: 140px; }
+.table-card .ours-row { background: #e4f1f8; }
+.table-card .ours-row th { color: #075a88; }
+.table-card .best { color: #075a41; font-weight: 800; }
+.table-note { color: #425660; border-color: #cbd5da; font-size: 14px; padding: 12px 20px; }
+.task-filters { margin: 20px 0; }
+.systems-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.system-card { padding: 14px; }
+.case-header { padding: 16px 20px; }
+.case-card { margin-bottom: 20px; }
+footer { min-height: 0; padding: 28px; }
+@media(max-width:700px) {
+ .hero { padding-top: 100px; }
+ .section { padding: 28px 18px; }
+ .real-world-listen, .systems-grid { grid-template-columns: 1fr; }
+ .figure-button img { max-height: none; }
+ .table-card th,.table-card td { padding: 12px 10px; font-size: 16px; }
+ .song-tabs button { flex: 1; padding: 10px; }
+}
