@@ -88,8 +88,8 @@
           <small>reference melody preservation</small>
         </div>
         <div>
-          <strong>4.13</strong><span>N-MOS ↑</span>
-          <small>naturalness, 95% CI [4.04, 4.22]</small>
+          <strong>4.11</strong><span>N-MOS ↑</span>
+          <small>naturalness · paired listening study</small>
         </div>
       </section>
 
@@ -131,6 +131,7 @@
         </div>
       </section>
 
+<section class="section"><div class="table-card"><div class="table-title"><h3>History access in related models</h3></div><div class="table-scroll"><table><thead><tr><th>Model</th><th>Global recurrent input</th><th>Local acoustic path</th><th>Role</th></tr></thead><tbody><tr><th>DiTAR</th><td>Encoded acoustic patches</td><td>Previous patches → local diffusion</td><td>Patch AR with local diffusion</td></tr><tr><th>VibeVoice</th><td>Semantic + acoustic projections</td><td>No separate predecessor input</td><td>Hybrid feedback for long-form speech</td></tr><tr><th>VoxCPM</th><td>Local-encoder acoustic embeddings</td><td>Previous patch → local diffusion</td><td>FSQ planning + residual acoustics</td></tr><tr><th>CALM</th><td>Noised acoustic history</td><td>Clean recent latents → short context</td><td>Noisy long / clean short context</td></tr><tr class="ours-row"><th>CLASVS</th><td>Frozen semantic feedback</td><td>Previous patch → Flow-DiT</td><td>Restricted global history for lyric editing</td></tr></tbody></table></div><p class="table-note">Main paper Table 1. Systems address different tasks: this compares information access, not same-task performance. CALM refers to its music configuration.</p></div></section>
       <section class="section method-section" id="method">
         <div class="section-heading split-heading">
           <div>
@@ -138,9 +139,9 @@
             <h2>State–Control–Transition routing</h2>
           </div>
           <p>
-            CLASVS generates normalized 64-D AudioVAE latents in 100-ms patches.
+            CLASVS generates 64-D AudioVAE latents in 100-ms patches.
             A Qwen3-0.6B causal planner retains the immutable controls; repeated
-            Flow-DiT blocks realize the acoustic sequence.
+            shared Flow-DiT generates five latent frames per 100-ms step.
           </p>
         </div>
 
@@ -225,8 +226,9 @@
               <span>Open figure ↗</span>
             </button>
             <figcaption>
-              Figure 2. State, control, and task grounding form a three-stage
-              curriculum for robust variable-length lyric editing.
+              Figure 2. State Grounding pretrains the causal encoder with character
+              CTC and Mel reconstruction. Control Grounding corrupts local history
+              and melody. Task Grounding uses 72K / 24K / 24K updates.
             </figcaption>
           </figure>
         </div>
@@ -245,121 +247,7 @@
           </p>
         </div>
 
-        <div class="table-card">
-          <div class="table-title">
-            <div>
-              <span>Objective evaluation</span>
-              <h3>CLA-LyricEdit-320</h3>
-            </div>
-            <small>↓ lower is better · ↑ higher is better</small>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>System</th>
-                  <th>PSub PER↓</th>
-                  <th>FSub PER↓</th>
-                  <th>Del PER↓</th>
-                  <th>Ins PER↓</th>
-                  <th>Macro-PER↓</th>
-                  <th>FPC↑</th>
-                  <th>SIM↑</th>
-                  <th>Onset ms↓</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>Vevo2</th>
-                  <td>.0617</td><td>.0563</td><td>.1033</td><td>.0581</td>
-                  <td>.0699</td><td>.7440</td><td>.892</td><td>69.58</td>
-                </tr>
-                <tr>
-                  <th>YingMusic-Singer-Plus</th>
-                  <td class="best">.0171</td><td class="best">.0245</td>
-                  <td>.0847</td><td>.0382</td><td>.0411</td><td>.9340</td>
-                  <td>.906</td><td>18.80</td>
-                </tr>
-                <tr class="ours-row">
-                  <th>CLASVS</th>
-                  <td>.0505</td><td>.0442</td><td class="best">.0260</td>
-                  <td class="best">.0298</td><td class="best">.0376</td>
-                  <td class="best">.9410</td><td class="best">.914</td>
-                  <td class="best">7.68</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="table-note">
-            Macro-PER 95% CI: Vevo2 [.0617, .0781],
-            YingMusic-Singer-Plus [.0356, .0469], CLASVS [.0326, .0429].
-          </p>
-        </div>
-
-        <div class="results-pair">
-          <div class="table-card listening-card">
-            <div class="table-title">
-              <div>
-                <span>Human evaluation</span>
-                <h3>20 native Mandarin listeners</h3>
-              </div>
-              <small>MOS [95% CI]</small>
-            </div>
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>System</th><th>N-MOS</th><th>M-MOS</th><th>L-MOS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th>Vevo2</th>
-                    <td>3.89 [3.78, 4.00]</td>
-                    <td>3.74 [3.63, 3.85]</td>
-                    <td>3.86 [3.75, 3.97]</td>
-                  </tr>
-                  <tr>
-                    <th>YingMusic-Singer-Plus</th>
-                    <td>3.65 [3.55, 3.74]</td>
-                    <td>4.27 [4.19, 4.35]</td>
-                    <td>4.10 [4.01, 4.19]</td>
-                  </tr>
-                  <tr class="ours-row">
-                    <th>CLASVS</th>
-                    <td class="best">4.13 [4.04, 4.22]</td>
-                    <td>4.28 [4.20, 4.36]</td>
-                    <td class="best">4.42 [4.34, 4.50]</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p class="table-note">
-              N-MOS: naturalness · M-MOS: melody adherence · L-MOS: lyric
-              pronunciation accuracy. The CLA–Ying M-MOS difference is not
-              statistically detectable (adjusted p = .79).
-            </p>
-          </div>
-          <figure class="paper-figure">
-            <button
-              class="figure-button"
-              type="button"
-              data-lightbox="./paper_assets/clasvs_fig3_representation_fidelity.png"
-              data-alt="Common-input comparison of objective and subjective metrics"
-            >
-              <img
-                src="./paper_assets/clasvs_fig3_representation_fidelity.png"
-                alt="Common-input comparison of objective and subjective metrics"
-                loading="lazy"
-              />
-              <span>Open figure ↗</span>
-            </button>
-            <figcaption>
-              Figure 3. Common-input comparison of discrete AR, continuous NAR,
-              and CLASVS continuous AR systems.
-            </figcaption>
-          </figure>
-        </div>
+<div class="table-card"><div class="table-title"><h3>CLA-LyricEdit-320</h3></div><div class="table-scroll"><table><thead><tr><th>System</th><th>PSub PER↓</th><th>FSub PER↓</th><th>Del PER↓</th><th>Ins PER↓</th><th>Macro-PER↓ [95% CI]</th></tr></thead><tbody><tr><th>Vevo2</th><td>.0617</td><td>.0563</td><td>.1033</td><td>.0581</td><td>.0699 [.0617, .0781]</td></tr><tr><th>YingMusic+</th><td class="best">.0171</td><td class="best">.0245</td><td>.0847</td><td>.0382</td><td>.0411 [.0356, .0469]</td></tr><tr class="ours-row"><th>CLASVS</th><td>.0505</td><td>.0442</td><td class="best">.0260</td><td class="best">.0298</td><td class="best">.0376 [.0326, .0429]</td></tr></tbody></table></div><p class="table-note">320 edits from 80 songs. Macro-PER intervals are song-clustered. Bold marks best point estimates, not significance.</p></div><div class="table-card"><div class="table-title"><h3>Public LyricEditBench</h3></div><div class="table-scroll"><table><thead><tr><th>System</th><th>PSub PER↓</th><th>FSub PER↓</th><th>Del PER↓</th><th>Ins PER↓</th><th>Macro-PER↓</th></tr></thead><tbody><tr><th>Vevo2</th><td>.0664</td><td>.0607</td><td>.1123</td><td>.0649</td><td>.0761</td></tr><tr><th>YingMusic+</th><td class="best">.0214</td><td class="best">.0186</td><td>.0946</td><td>.0426</td><td>.0443</td></tr><tr class="ours-row"><th>CLASVS</th><td>.0508</td><td>.0435</td><td class="best">.0398</td><td class="best">.0357</td><td class="best">.0425</td></tr></tbody></table></div><p class="table-note">Frozen four-operation Mandarin split.</p></div><div class="table-card"><div class="table-title"><h3>Performance preservation</h3></div><div class="table-scroll"><table><thead><tr><th>System</th><th>FPC↑</th><th>SIM↑</th><th>RefDur (%)↓</th><th>Onset (ms)↓</th></tr></thead><tbody><tr><th>Vevo2</th><td>.7440</td><td>.892</td><td>1.6009</td><td>69.58</td></tr><tr><th>YingMusic+</th><td>.9340</td><td>.906</td><td class="best">.1464</td><td>18.80</td></tr><tr class="ours-row"><th>CLASVS</th><td class="best">.9410</td><td class="best">.914</td><td>.9923</td><td class="best">7.68</td></tr></tbody></table></div><p class="table-note">Primary benchmark. YingMusic+ has lower global duration deviation.</p></div><div class="table-card"><div class="table-title"><h3>Perceptual quality</h3></div><div class="table-scroll"><table><thead><tr><th>System</th><th>N-MOS↑</th><th>M-MOS↑</th><th>L-MOS↑</th></tr></thead><tbody><tr><th>Vevo2</th><td>3.89</td><td>3.74</td><td>3.86</td></tr><tr><th>YingMusic+</th><td>3.65</td><td>4.27</td><td>4.10</td></tr><tr class="ours-row"><th>CLASVS</th><td class="best">4.11</td><td class="best">4.28</td><td class="best">4.40</td></tr></tbody></table></div><p class="table-note">80 paired base edits, 240 audios, 20 Mandarin listeners, eight ratings per audio. N: naturalness; M: melody adherence; L: lyric intelligibility. Individual-system intervals are not reported in the revised paper.</p></div><div class="table-card"><div class="table-title"><h3>Paired contrasts: CLASVS − YingMusic+</h3></div><div class="table-scroll"><table><thead><tr><th>Metric</th><th>Difference [95% CI]</th><th>Holm p</th></tr></thead><tbody><tr><th>N-MOS</th><td>+.46 [+.24, +.68]</td><td>.000083</td></tr><tr><th>M-MOS</th><td>+.01 (point estimate only)</td><td>—</td></tr><tr><th>L-MOS</th><td>+.30 [+.08, +.52]</td><td>.0075</td></tr></tbody></table></div><p class="table-note">The .01 M-MOS difference is descriptive and does not establish equivalence. CLASVS improves deletion and insertion; YingMusic+ remains stronger on substitution.</p></div><figure class="paper-figure"><button class="figure-button" type="button" data-lightbox="./paper_assets/clasvs_fig3_comparison.png" data-alt="Operation-resolved PER and paired perceptual contrasts"><img src="./paper_assets/clasvs_fig3_comparison.png" alt="Operation-resolved PER and paired perceptual contrasts" loading="lazy"/><span>Open figure ↗</span></button><figcaption>Figure 3. Operation-resolved PER on the primary benchmark and paired CLASVS–YingMusic+ naturalness and lyric-intelligibility differences with 95% intervals. Operation bars are point estimates.</figcaption></figure><p class="table-note">Quality configuration: 24 Euler steps, CFG 2.0; single H200, batch one. Warm end-to-end RTF 1.45, incremental peak memory 5.8 GiB, total resident peak 9 GiB. This configuration is slower than real time.</p>
       </section>
 
       <section class="section real-world-section" id="real-world">
@@ -959,42 +847,7 @@
         </div>
       </section>
 
-      <section class="section diagnostics-section">
-        <details>
-          <summary>
-            <span>05 / Analysis</span>
-            <strong>Open SCT mechanism and rollout diagnostics</strong>
-            <i>+</i>
-          </summary>
-          <div>
-            <figure class="paper-figure">
-              <button
-                class="figure-button"
-                type="button"
-                data-lightbox="./paper_assets/clasvs_fig4_mechanism_rollout.png"
-                data-alt="SCT mechanism and rollout diagnostics"
-              >
-                <img
-                  src="./paper_assets/clasvs_fig4_mechanism_rollout.png"
-                  alt="SCT mechanism and rollout diagnostics"
-                  loading="lazy"
-                />
-                <span>Open figure ↗</span>
-              </button>
-              <figcaption>
-                Figure 4. Paired route interventions, a frozen progress probe, and
-                failure rates by output-length quartile.
-              </figcaption>
-            </figure>
-            <p>
-              Semantic-state shuffling reduces target-text preference; raw-patch
-              shuffling harms melody continuity more. The frozen progress probe
-              recovers phonetic progress more accurately from semantic state than
-              from the raw acoustic predecessor.
-            </p>
-          </div>
-        </details>
-      </section>
+<section class="section" id="analysis"><div class="section-heading"><p class="section-index">05 / Controlled analysis</p><h2>History routing and training controls</h2><p>Main paper Table 3: locked continuous-AR protocol.</p></div><div class="table-card"><div class="table-title"><h3>A. History access</h3></div><div class="table-scroll"><table><thead><tr><th>Configuration</th><th>Change from Full</th><th>PER↓</th><th>FPC↑</th><th>SrcRev↓</th></tr></thead><tbody><tr class="ours-row"><th>Full SCT + PSCG</th><td>Reference configuration</td><td class="best">.0376</td><td class="best">.9410</td><td class="best">.081</td></tr><tr><th>Unified</th><td>Add acoustics to planner</td><td>.0450</td><td>.9300</td><td>.120</td></tr><tr><th>No semantic feedback</th><td>Remove semantic route</td><td>.0564</td><td>.9205</td><td>.154</td></tr><tr><th>No local acoustic patch</th><td>Remove local predecessor</td><td>.0492</td><td>.8896</td><td>.086</td></tr></tbody></table></div><p class="table-note">Unified adds 328,704 parameters while preserving one planner token and the local predecessor.</p></div><div class="table-card"><div class="table-title"><h3>B. Training budget</h3></div><div class="table-scroll"><table><thead><tr><th>Configuration</th><th>Updates</th><th>Trainable</th><th>Total budget</th><th>PER↓</th></tr></thead><tbody><tr><th>Random-joint</th><td>120K</td><td>1.395B</td><td>1.20</td><td>.0511</td></tr><tr><th>Random-joint</th><td>130K</td><td>1.395B</td><td>1.30</td><td>.0477</td></tr><tr><th>Random-joint</th><td>140K</td><td>1.395B</td><td>1.40</td><td>.0444</td></tr><tr class="ours-row"><th>Full SCT + PSCG</th><td>120K</td><td>.765B</td><td>1.40</td><td class="best">.0376</td></tr></tbody></table></div><p class="table-note">Normalized compute includes State pretraining; it is not equal wall-clock time.</p></div><div class="table-card"><div class="table-title"><h3>C. Training controls</h3></div><div class="table-scroll"><table><thead><tr><th>Configuration</th><th>Change from Full</th><th>PER↓</th><th>SrcRev↓</th></tr></thead><tbody><tr><th>No history dropout</th><td>Set local pₕ = 0 only</td><td>.0440</td><td>.130</td></tr><tr><th>No Control Grounding</th><td>Remove both corruptions</td><td>.0468</td><td>.121</td></tr><tr><th>No Task Grounding</th><td>Shuffle the same exposures</td><td>.0439</td><td>.102</td></tr></tbody></table></div><p class="table-note">120K downstream updates. No-history-dropout averages seeds 0/1/2. Unreported uncertainty and FPC are not imputed.</p></div><figure class="paper-figure"><button class="figure-button" type="button" data-lightbox="./paper_assets/clasvs_fig4_information_profile.png" data-alt="Accessible information in semantic and acoustic history"><img src="./paper_assets/clasvs_fig4_information_profile.png" alt="Accessible information in semantic and acoustic history" loading="lazy"/><span>Open figure ↗</span></button><figcaption>Figure 4. Linear probes of target-position progress, singer identity, and frame-level log-F0. Orange bars are external normalized-time and chance baselines. Values are point estimates.</figcaption></figure><p>Semantic/acoustic progress MAE: .082/.191 (time baseline .120); singer accuracy: 8.6%/91.2% (chance 2.5%); log-F0 R²: .09/.84. These results support different information profiles without proving disentanglement or causal use.</p><p>Semantic-history shuffling reduces lyric margin .3685 → .2469; predecessor shuffling reduces melody margin .200 → .170. Missing cross-route effects and intervals prevent a double-dissociation claim.</p></section>
 
       <section class="release-note" aria-label="Research-use notice">
         <div>
