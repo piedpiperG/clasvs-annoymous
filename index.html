@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="CLASVS project page and audio demos for melody-preserving lyric editing in singing voice synthesis."
+    />
+    <meta name="theme-color" content="#11171b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CLASVS · Melody-Preserving Lyric Editing" />
+    <meta
+      property="og:description"
+      content="Continuous-latent autoregression for editing lyrics while preserving melody, timing, singer identity, and expression."
+    />
+    <title>CLASVS · Melody-Preserving Lyric Editing</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script defer src="./demo-data.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <main>
+      <nav class="top-nav" aria-label="Page navigation">
+        <a class="wordmark" href="#top"><span>CLA</span>SVS</a>
+        <div>
+          <a href="#real-world">Real songs</a>
+          <a href="#method">Method</a>
+          <a href="#results">Results</a>
+          <a href="#demos">Audio demos</a>
+        </div>
+      </nav>
+
+      <header class="hero" id="top">
+        <div class="hero-signal" aria-hidden="true" id="hero-signal"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">Anonymous submission · Audio demonstrations</p>
+          <h1>
+            <span class="method-name">CLASVS</span><br />
+            Continuous-Latent<br />
+            Autoregression for<br />
+            <em>Melody-Preserving</em><br />
+            Lyric Editing
+          </h1>
+          <p class="hero-summary">
+            Change the words. Keep the melody, timing, singer identity, and
+            expression of the reference performance.
+          </p>
+          <p class="hero-authors">Anonymous submission</p>
+          <div class="hero-actions">
+            <a class="button-primary" href="#real-world">Listen to real-song edits</a>
+            <a class="button-secondary" href="#demos">Explore benchmark demos</a>
+          </div>
+        </div>
+        <aside class="hero-contract">
+          <p>Editing contract</p>
+          <div>
+            <span>01</span>
+            <strong>Reference singing</strong>
+            <small>melody · timing · singer · expression</small>
+          </div>
+          <b>+</b>
+          <div>
+            <span>02</span>
+            <strong>Target lyrics</strong>
+            <small>no MIDI · no duration · no edit boundary</small>
+          </div>
+          <b>→</b>
+          <div class="contract-output">
+            <span>03</span>
+            <strong>Edited singing</strong>
+            <small>new words in the original performance</small>
+          </div>
+        </aside>
+      </header>
+
+<section class="metric-ribbon" aria-label="Headline paper metrics">
+        <div>
+          <strong>.0376</strong><span>Macro-PER ↓</span>
+          <small>best balanced lyric accuracy</small>
+        </div>
+        <div>
+          <strong>.0279</strong><span>Del / Ins PER ↓</span>
+          <small>mean on variable-length edits</small>
+        </div>
+        <div>
+          <strong>.9410</strong><span>FPC ↑</span>
+          <small>reference melody preservation</small>
+        </div>
+        <div>
+          <strong>4.13</strong><span>N-MOS ↑</span>
+          <small>naturalness, 95% CI [4.04, 4.22]</small>
+        </div>
+      </section>
+
+      <section class="section intro-section">
+        <div class="section-heading">
+          <p class="section-index">01 / Overview</p>
+          <h2>Selective preservation is the real editing problem.</h2>
+        </div>
+        <div class="intro-grid">
+          <p class="lead">
+            A reference recording contains exactly what we want to preserve—and
+            the obsolete words we need to reject. CLASVS separates these roles
+            instead of compressing the whole performance into one ambiguous
+            history stream.
+          </p>
+          <div class="role-list">
+            <article>
+              <span>S</span>
+              <div>
+                <h3>State</h3>
+                <p>Compact semantic feedback tracks what has already been sung.</p>
+              </div>
+            </article>
+            <article>
+              <span>C</span>
+              <div>
+                <h3>Control</h3>
+                <p>Target lyrics and reference melody remain globally authoritative.</p>
+              </div>
+            </article>
+            <article>
+              <span>T</span>
+              <div>
+                <h3>Transition</h3>
+                <p>One raw acoustic predecessor preserves short-range continuity.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section method-section" id="method">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="section-index">02 / Method</p>
+            <h2>State–Control–Transition routing</h2>
+          </div>
+          <p>
+            CLASVS generates normalized 64-D AudioVAE latents in 100-ms patches.
+            A Qwen3-0.6B causal planner retains the immutable controls; repeated
+            Flow-DiT blocks realize the acoustic sequence.
+          </p>
+        </div>
+
+        <figure class="paper-figure">
+          <button
+            class="figure-button"
+            type="button"
+            data-lightbox="./paper_assets/clasvs_fig1_sct_overview.png"
+            data-alt="CLASVS State Control Transition architecture"
+          >
+            <img
+              src="./paper_assets/clasvs_fig1_sct_overview.png"
+              alt="CLASVS State Control Transition architecture"
+            />
+            <span>Open figure ↗</span>
+          </button>
+          <figcaption>
+            Figure 1. Target lyrics and melody remain in the causal planner cache;
+            semantic feedback records progress, while the raw predecessor is
+            confined to the local acoustic transition.
+          </figcaption>
+        </figure>
+
+        <div class="method-points">
+          <article>
+            <span>10 Hz</span>
+            <h3>Variable-length recurrence</h3>
+            <p>
+              The stop head determines output length, so insertions and deletions
+              can expand or compress the realization.
+            </p>
+          </article>
+          <article>
+            <span>6.25 Hz</span>
+            <h3>Reference melody tokens</h3>
+            <p>
+              Chroma-derived control emphasizes pitch and timing instead of source
+              lexical content.
+            </p>
+          </article>
+          <article>
+            <span>192 D</span>
+            <h3>Singer conditioning</h3>
+            <p>
+              A frozen CAM++ embedding bypasses the planner and modulates each
+              Flow-DiT block.
+            </p>
+          </article>
+        </div>
+
+        <div class="pscg-grid">
+          <div>
+            <p class="section-index">Progressive grounding</p>
+            <h2>PSCG teaches every route to do one job well.</h2>
+            <ol>
+              <li>
+                <b>State Grounding</b>
+                <span>Ground semantic feedback in realized phonetic progress.</span>
+              </li>
+              <li>
+                <b>Control Grounding</b>
+                <span>Follow explicit lyrics and melody under imperfect history.</span>
+              </li>
+              <li>
+                <b>Task Grounding</b>
+                <span>Transfer broad Mandarin coverage to curated singing.</span>
+              </li>
+            </ol>
+          </div>
+          <figure class="paper-figure">
+            <button
+              class="figure-button"
+              type="button"
+              data-lightbox="./paper_assets/clasvs_fig2_pscg.png"
+              data-alt="Progressive State Control Grounding training curriculum"
+            >
+              <img
+                src="./paper_assets/clasvs_fig2_pscg.png"
+                alt="Progressive State Control Grounding training curriculum"
+                loading="lazy"
+              />
+              <span>Open figure ↗</span>
+            </button>
+            <figcaption>
+              Figure 2. State, control, and task grounding form a three-stage
+              curriculum for robust variable-length lyric editing.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section results-section" id="results">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="section-index">03 / Results</p>
+            <h2>Balanced accuracy without sacrificing the performance.</h2>
+          </div>
+          <p>
+            Confirmatory results use one candidate per item/run on 320 Mandarin
+            edits. Bold cells mark the best reported value among systems with the
+            same automatic reference-and-target input policy.
+          </p>
+        </div>
+
+        <div class="table-card">
+          <div class="table-title">
+            <div>
+              <span>Objective evaluation</span>
+              <h3>CLA-LyricEdit-320</h3>
+            </div>
+            <small>↓ lower is better · ↑ higher is better</small>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>System</th>
+                  <th>PSub PER↓</th>
+                  <th>FSub PER↓</th>
+                  <th>Del PER↓</th>
+                  <th>Ins PER↓</th>
+                  <th>Macro-PER↓</th>
+                  <th>FPC↑</th>
+                  <th>SIM↑</th>
+                  <th>Onset ms↓</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Vevo2</th>
+                  <td>.0617</td><td>.0563</td><td>.1033</td><td>.0581</td>
+                  <td>.0699</td><td>.7440</td><td>.892</td><td>69.58</td>
+                </tr>
+                <tr>
+                  <th>YingMusic-Singer-Plus</th>
+                  <td class="best">.0171</td><td class="best">.0245</td>
+                  <td>.0847</td><td>.0382</td><td>.0411</td><td>.9340</td>
+                  <td>.906</td><td>18.80</td>
+                </tr>
+                <tr class="ours-row">
+                  <th>CLASVS</th>
+                  <td>.0505</td><td>.0442</td><td class="best">.0260</td>
+                  <td class="best">.0298</td><td class="best">.0376</td>
+                  <td class="best">.9410</td><td class="best">.914</td>
+                  <td class="best">7.68</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-note">
+            Macro-PER 95% CI: Vevo2 [.0617, .0781],
+            YingMusic-Singer-Plus [.0356, .0469], CLASVS [.0326, .0429].
+          </p>
+        </div>
+
+        <div class="results-pair">
+          <div class="table-card listening-card">
+            <div class="table-title">
+              <div>
+                <span>Human evaluation</span>
+                <h3>20 native Mandarin listeners</h3>
+              </div>
+              <small>MOS [95% CI]</small>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>System</th><th>N-MOS</th><th>M-MOS</th><th>L-MOS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>Vevo2</th>
+                    <td>3.89 [3.78, 4.00]</td>
+                    <td>3.74 [3.63, 3.85]</td>
+                    <td>3.86 [3.75, 3.97]</td>
+                  </tr>
+                  <tr>
+                    <th>YingMusic-Singer-Plus</th>
+                    <td>3.65 [3.55, 3.74]</td>
+                    <td>4.27 [4.19, 4.35]</td>
+                    <td>4.10 [4.01, 4.19]</td>
+                  </tr>
+                  <tr class="ours-row">
+                    <th>CLASVS</th>
+                    <td class="best">4.13 [4.04, 4.22]</td>
+                    <td>4.28 [4.20, 4.36]</td>
+                    <td class="best">4.42 [4.34, 4.50]</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="table-note">
+              N-MOS: naturalness · M-MOS: melody adherence · L-MOS: lyric
+              pronunciation accuracy. The CLA–Ying M-MOS difference is not
+              statistically detectable (adjusted p = .79).
+            </p>
+          </div>
+          <figure class="paper-figure">
+            <button
+              class="figure-button"
+              type="button"
+              data-lightbox="./paper_assets/clasvs_fig3_representation_fidelity.png"
+              data-alt="Common-input comparison of objective and subjective metrics"
+            >
+              <img
+                src="./paper_assets/clasvs_fig3_representation_fidelity.png"
+                alt="Common-input comparison of objective and subjective metrics"
+                loading="lazy"
+              />
+              <span>Open figure ↗</span>
+            </button>
+            <figcaption>
+              Figure 3. Common-input comparison of discrete AR, continuous NAR,
+              and CLASVS continuous AR systems.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section real-world-section" id="real-world">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="section-index">00 / Real-song showcase</p>
+            <h2>Edit the words inside real mixed songs.</h2>
+          </div>
+          <p>
+            These three examples start from complete music recordings—not clean,
+            pre-aligned laboratory clips. We automatically separate the vocals,
+            rewrite consecutive lyric lines with CLASVS, and mix the edited
+            singing back into each original accompaniment.
+          </p>
+        </div>
+
+        <article class="real-world-case">
+          <header class="real-world-header">
+            <div>
+              <p class="real-world-kicker">REAL-WORLD CASE 01 · MANDARIN POP</p>
+              <h3 lang="zh-CN">湘江中路</h3>
+              <p>
+                A continuous 31.0-second excerpt with eight rewritten vocal lines.
+                The instrumental intro is removed from all three audio versions.
+              </p>
+            </div>
+            <div class="real-world-stats" aria-label="Case summary">
+              <span><strong>8 / 8</strong><small>lines with PER = 0</small></span>
+              <span><strong>.985</strong><small>mean FPC</small></span>
+              <span><strong>31.0 s</strong><small>intro-trimmed audio</small></span>
+            </div>
+          </header>
+
+          <div class="real-world-pipeline" aria-label="Automatic editing workflow">
+            <span><b>01</b> Original song</span>
+            <i>→</i>
+            <span><b>02</b> Vocal separation</span>
+            <i>→</i>
+            <span><b>03</b> CLASVS lyric edit</span>
+            <i>→</i>
+            <span><b>04</b> Accompaniment remix</span>
+          </div>
+
+          <div class="real-world-listen">
+            <section class="listen-card listen-card-original">
+              <div>
+                <span>A · SOURCE</span>
+                <strong>Original mixed recording</strong>
+              </div>
+              <p>
+                The original eight lyric lines, starting at the first vocal line.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="湘江中路 original mixed recording"
+                src="./real_world_assets/real_song_1/original_first8.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-edited">
+              <div>
+                <span>B · EDITED</span>
+                <strong>CLASVS edit + accompaniment</strong>
+              </div>
+              <p>
+                New lyrics sung in the original melodic and acoustic context,
+                then returned to the same accompaniment.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="湘江中路 edited singing mixed with accompaniment"
+                src="./real_world_assets/real_song_1/edited_first8_with_instrumental.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-vocal">
+              <div>
+                <span>C · ISOLATED OUTPUT</span>
+                <strong>Edited vocal timeline</strong>
+              </div>
+              <p>
+                The same generated vocal without accompaniment, provided to make
+                pronunciation, timing, and phrase transitions easier to inspect.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="湘江中路 isolated edited vocal"
+                src="./real_world_assets/real_song_1/edited_first8_vocal.flac"
+              ></audio>
+            </section>
+          </div>
+
+          <div class="real-world-contract">
+            <div>
+              <span>INPUT POLICY</span>
+              <strong>Fully automatic</strong>
+              <p>
+                Original mixed audio + target lyrics. No MIDI, manual note
+                durations, phoneme alignment, or hand-marked edit boundaries.
+              </p>
+            </div>
+            <div>
+              <span>PRESERVATION TARGET</span>
+              <strong>Performance continuity</strong>
+              <p>
+                Keep the reference melody, timing, singer identity, expression,
+                accompaniment, and untouched instrumental context.
+              </p>
+            </div>
+          </div>
+
+          <div class="real-world-lyrics">
+            <div class="lyrics-table-heading">
+              <div>
+                <span>THE EIGHT EDITS</span>
+                <h4>What changed inside the performance</h4>
+              </div>
+              <small>PER ↓ · FPC ↑</small>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">01</span><time>0.00–3.96</time>
+              <p class="source-lyric" lang="zh-CN">风带着潮湿</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">风吹散潮湿</p>
+              <div><b>0.000</b><small>PER</small><b>.999</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">02</span><time>3.96–7.63</time>
+              <p class="source-lyric" lang="zh-CN">水在讲故事</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">谁还在等我</p>
+              <div><b>0.000</b><small>PER</small><b>.945</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">03</span><time>7.63–11.24</time>
+              <p class="source-lyric" lang="zh-CN">无处停留的我</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">无处告别的我</p>
+              <div><b>0.000</b><small>PER</small><b>.990</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">04</span><time>11.24–15.30</time>
+              <p class="source-lyric" lang="zh-CN">绕着江若无其事</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">沿着江看夜色落</p>
+              <div><b>0.000</b><small>PER</small><b>.990</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">05</span><time>15.30–19.13</time>
+              <p class="source-lyric" lang="zh-CN">三两人经过</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">三两盏灯火</p>
+              <div><b>0.000</b><small>PER</small><b>.998</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">06</span><time>19.13–23.29</time>
+              <p class="source-lyric" lang="zh-CN">路中央有人在唱歌</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">桥那边有人轻声唱</p>
+              <div><b>0.000</b><small>PER</small><b>.971</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">07</span><time>23.29–27.47</time>
+              <p class="source-lyric" lang="zh-CN">我蹲下听着</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">我停下听着</p>
+              <div><b>0.000</b><small>PER</small><b>.996</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">08</span><time>27.47–30.99</time>
+              <p class="source-lyric" lang="zh-CN">她也望向我</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">晚风拥抱我</p>
+              <div><b>0.000</b><small>PER</small><b>.988</b><small>FPC</small></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="real-world-case">
+          <header class="real-world-header">
+            <div>
+              <p class="real-world-kicker">REAL-WORLD CASE 02 · MANDARIN POP</p>
+              <h3 lang="zh-CN">真英雄</h3>
+              <p>
+                A continuous 50.4-second excerpt that rewrites ten consecutive
+                lines into a new, optimistic narrative. The instrumental intro
+                is removed from all three audio versions.
+              </p>
+            </div>
+            <div class="real-world-stats" aria-label="Case summary">
+              <span><strong>10 / 10</strong><small>lines with PER = 0</small></span>
+              <span><strong>.951</strong><small>mean FPC</small></span>
+              <span><strong>50.4 s</strong><small>intro-trimmed audio</small></span>
+            </div>
+          </header>
+
+          <div class="real-world-pipeline" aria-label="Automatic editing workflow">
+            <span><b>01</b> Original song</span>
+            <i>→</i>
+            <span><b>02</b> Vocal separation</span>
+            <i>→</i>
+            <span><b>03</b> CLASVS lyric edit</span>
+            <i>→</i>
+            <span><b>04</b> Accompaniment remix</span>
+          </div>
+
+          <div class="real-world-listen">
+            <section class="listen-card listen-card-original">
+              <div>
+                <span>A · SOURCE</span>
+                <strong>Original mixed recording</strong>
+              </div>
+              <p>
+                The original ten lyric lines, starting at the first vocal line.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="真英雄 original mixed recording"
+                src="./real_world_assets/real_song_2/original_first10.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-edited">
+              <div>
+                <span>B · EDITED</span>
+                <strong>CLASVS edit + accompaniment</strong>
+              </div>
+              <p>
+                Ten selected lyric edits returned to the original accompaniment,
+                including equal-length and syllable-added rewrites.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="真英雄 edited singing mixed with accompaniment"
+                src="./real_world_assets/real_song_2/edited_first10_with_instrumental.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-vocal">
+              <div>
+                <span>C · ISOLATED OUTPUT</span>
+                <strong>Edited vocal timeline</strong>
+              </div>
+              <p>
+                The same generated vocal without accompaniment, provided to make
+                pronunciation, timing, and phrase transitions easier to inspect.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="真英雄 isolated edited vocal"
+                src="./real_world_assets/real_song_2/edited_first10_vocal.flac"
+              ></audio>
+            </section>
+          </div>
+
+          <div class="real-world-contract">
+            <div>
+              <span>INPUT POLICY</span>
+              <strong>Fully automatic</strong>
+              <p>
+                Original mixed audio + target lyrics. No MIDI, manual note
+                durations, phoneme alignment, or hand-marked edit boundaries.
+              </p>
+            </div>
+            <div>
+              <span>REWRITE COVERAGE</span>
+              <strong>Flexible lyric length</strong>
+              <p>
+                Eight equal-length edits and two one-character additions are
+                realized while preserving the original musical context.
+              </p>
+            </div>
+          </div>
+
+          <div class="real-world-lyrics">
+            <div class="lyrics-table-heading">
+              <div>
+                <span>THE TEN EDITS</span>
+                <h4>What changed inside the performance</h4>
+              </div>
+              <small>PER ↓ · FPC ↑</small>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">01</span><time>0.00–4.63</time>
+              <p class="source-lyric" lang="zh-CN">醉卧于沙场 听呐喊的沙哑</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">平凡人登场 也敢笑着出发</p>
+              <div><b>0.000</b><small>PER</small><b>.954</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">02</span><time>4.76–9.01</time>
+              <p class="source-lyric" lang="zh-CN">笑看人世间 火树银花</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">没披风铠甲 心中有光</p>
+              <div><b>0.000</b><small>PER</small><b>.966</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">03</span><time>9.52–14.23</time>
+              <p class="source-lyric" lang="zh-CN">数风云叱咤 不过道道伤疤</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">带着一身伤疤 也要笑着出发</p>
+              <div><b>0.000</b><small>PER</small><b>.966</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">04</span><time>14.40–18.69</time>
+              <p class="source-lyric" lang="zh-CN">成王败寇 一念之差</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">不争输赢 一路到家</p>
+              <div><b>0.000</b><small>PER</small><b>.872</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">05</span><time>19.14–23.83</time>
+              <p class="source-lyric" lang="zh-CN">生死一霎那 豪气永放光华</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">就算偶尔害怕 也把希望高挂</p>
+              <div><b>0.000</b><small>PER</small><b>.957</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">06</span><time>24.00–28.55</time>
+              <p class="source-lyric" lang="zh-CN">江山如此大 何处是家</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">世界那么大 有爱是家</p>
+              <div><b>0.000</b><small>PER</small><b>.963</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">07</span><time>28.83–33.48</time>
+              <p class="source-lyric" lang="zh-CN">过重重关卡 看盛世的烟花</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">走过山与海 仍带笑看晚霞</p>
+              <div><b>0.000</b><small>PER</small><b>.947</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">08</span><time>33.65–37.88</time>
+              <p class="source-lyric" lang="zh-CN">赢尽了天下 输了她</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">平凡的我们 去远方</p>
+              <div><b>0.000</b><small>PER</small><b>.973</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">09</span><time>40.81–45.42</time>
+              <p class="source-lyric" lang="zh-CN">颠覆了天下 贪一夜浮夸</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">不争那天下 只守着牵挂</p>
+              <div><b>0.000</b><small>PER</small><b>.987</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">10</span><time>45.61–50.00</time>
+              <p class="source-lyric" lang="zh-CN">人生只不过 一场厮杀</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">平凡人也能 勇敢出发</p>
+              <div><b>0.000</b><small>PER</small><b>.921</b><small>FPC</small></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="real-world-case">
+          <header class="real-world-header">
+            <div>
+              <p class="real-world-kicker">REAL-WORLD CASE 03 · MANDARIN POP</p>
+              <h3 lang="zh-CN">认真的老去</h3>
+              <p>
+                A continuous 70.4-second excerpt with eighteen lyric lines
+                rewritten across two vocal passages while the original humming
+                transitions remain untouched. The intro is removed from all three audio versions.
+              </p>
+            </div>
+            <div class="real-world-stats" aria-label="Case summary">
+              <span><strong>18 / 18</strong><small>lines with PER = 0</small></span>
+              <span><strong>.948</strong><small>mean FPC</small></span>
+              <span><strong>70.4 s</strong><small>intro-trimmed audio</small></span>
+            </div>
+          </header>
+
+          <div class="real-world-pipeline" aria-label="Automatic editing workflow">
+            <span><b>01</b> Original song</span>
+            <i>→</i>
+            <span><b>02</b> Vocal separation</span>
+            <i>→</i>
+            <span><b>03</b> CLASVS lyric edit</span>
+            <i>→</i>
+            <span><b>04</b> Accompaniment remix</span>
+          </div>
+
+          <div class="real-world-listen">
+            <section class="listen-card listen-card-original">
+              <div>
+                <span>A · SOURCE</span>
+                <strong>Original mixed recording</strong>
+              </div>
+              <p>
+                The original 70.4-second excerpt, including all vocal lines,
+                accompaniment, and the two intervening humming passages.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="认真的老去 original mixed recording"
+                src="./real_world_assets/real_song_3/original_line01_18.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-edited">
+              <div>
+                <span>B · EDITED</span>
+                <strong>CLASVS edit + accompaniment</strong>
+              </div>
+              <p>
+                Eighteen edited lines returned to the original accompaniment,
+                covering equal-length, insertion, and deletion rewrites.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="认真的老去 edited singing mixed with accompaniment"
+                src="./real_world_assets/real_song_3/edited_line01_18_with_instrumental.flac"
+              ></audio>
+            </section>
+
+            <section class="listen-card listen-card-vocal">
+              <div>
+                <span>C · ISOLATED OUTPUT</span>
+                <strong>Edited vocal timeline</strong>
+              </div>
+              <p>
+                The generated vocal timeline without accompaniment, including
+                the untouched humming transitions for continuity inspection.
+              </p>
+              <audio
+                controls
+                preload="none"
+                aria-label="认真的老去 isolated edited vocal"
+                src="./real_world_assets/real_song_3/edited_line01_18_vocal.flac"
+              ></audio>
+            </section>
+          </div>
+
+          <div class="real-world-contract">
+            <div>
+              <span>INPUT POLICY</span>
+              <strong>Fully automatic</strong>
+              <p>
+                Original mixed audio + target lyrics. No MIDI, manual note
+                durations, phoneme alignment, or hand-marked edit boundaries.
+              </p>
+            </div>
+            <div>
+              <span>CONTINUITY CHECK</span>
+              <strong>Untouched vocal gestures</strong>
+              <p>
+                The original long and short hums at 23.55–35.45 and 58.25–59.85
+                seconds pass through unchanged between edited lyric passages.
+              </p>
+            </div>
+          </div>
+
+          <div class="real-world-lyrics">
+            <div class="lyrics-table-heading">
+              <div>
+                <span>THE EIGHTEEN EDITS</span>
+                <h4>What changed inside the performance</h4>
+              </div>
+              <small>PER ↓ · FPC ↑</small>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">01</span><time>0.00–3.00</time>
+              <p class="source-lyric" lang="zh-CN">忘了什么时候开始</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">还记得什么时候开始</p>
+              <div><b>0.000</b><small>PER</small><b>.973</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">02</span><time>3.00–5.70</time>
+              <p class="source-lyric" lang="zh-CN">到清晨才能入睡</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">在清晨安然入睡</p>
+              <div><b>0.000</b><small>PER</small><b>.990</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">03</span><time>5.70–8.97</time>
+              <p class="source-lyric" lang="zh-CN">也忘了什么叫做结尾</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">也懂了什么才算结尾</p>
+              <div><b>0.000</b><small>PER</small><b>.988</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">04</span><time>8.97–11.84</time>
+              <p class="source-lyric" lang="zh-CN">又有谁在乎呢</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">总有人在乎呢</p>
+              <div><b>0.000</b><small>PER</small><b>.991</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">05</span><time>11.84–14.99</time>
+              <p class="source-lyric" lang="zh-CN">凌晨三点的窗前</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">城市三点的窗前</p>
+              <div><b>0.000</b><small>PER</small><b>.979</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">06</span><time>14.99–17.78</time>
+              <p class="source-lyric" lang="zh-CN">播放着那段时光</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">回想着那些时光</p>
+              <div><b>0.000</b><small>PER</small><b>.994</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">07</span><time>17.78–20.38</time>
+              <p class="source-lyric" lang="zh-CN">有一个骄傲的少年</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">有一个很勇敢的少年</p>
+              <div><b>0.000</b><small>PER</small><b>.991</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">08</span><time>20.38–23.56</time>
+              <p class="source-lyric" lang="zh-CN">隐藏他的青春</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">珍藏他的青春</p>
+              <div><b>0.000</b><small>PER</small><b>.988</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">09</span><time>35.43–38.00</time>
+              <p class="source-lyric" lang="zh-CN">不如让我忘了自己</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">不如让我找回自己</p>
+              <div><b>0.000</b><small>PER</small><b>.972</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">10</span><time>38.00–41.06</time>
+              <p class="source-lyric" lang="zh-CN">你觉得怎么样呢</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">你说这样好吗</p>
+              <div><b>0.000</b><small>PER</small><b>.960</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">11</span><time>41.06–43.98</time>
+              <p class="source-lyric" lang="zh-CN">在每个向往的地方</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">在努力过的地方</p>
+              <div><b>0.000</b><small>PER</small><b>.962</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">12</span><time>43.98–47.15</time>
+              <p class="source-lyric" lang="zh-CN">释然一个遗憾</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">拥抱这遗憾</p>
+              <div><b>0.000</b><small>PER</small><b>.888</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">13</span><time>47.15–50.05</time>
+              <p class="source-lyric" lang="zh-CN">躺在我怀里的吉他</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">怀里抱着那吉他</p>
+              <div><b>0.000</b><small>PER</small><b>.754</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">14</span><time>50.05–52.92</time>
+              <p class="source-lyric" lang="zh-CN">好像厌倦了我</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">一直陪着我</p>
+              <div><b>0.000</b><small>PER</small><b>.975</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">15</span><time>52.92–55.75</time>
+              <p class="source-lyric" lang="zh-CN">重复最熟悉的段落</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">弹着熟悉的段落</p>
+              <div><b>0.000</b><small>PER</small><b>.969</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">16</span><time>55.75–58.24</time>
+              <p class="source-lyric" lang="zh-CN">好像无话可说</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">好像仍有话说</p>
+              <div><b>0.000</b><small>PER</small><b>.802</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">17</span><time>59.82–64.72</time>
+              <p class="source-lyric" lang="zh-CN">这生命正值春光</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">这生命正有春光</p>
+              <div><b>0.000</b><small>PER</small><b>.904</b><small>FPC</small></div>
+            </div>
+            <div class="real-world-line">
+              <span class="line-index">18</span><time>64.72–70.42</time>
+              <p class="source-lyric" lang="zh-CN">别装作刀枪不入的模样</p>
+              <i>→</i><p class="target-lyric" lang="zh-CN">别装作不受伤的模样</p>
+              <div><b>0.000</b><small>PER</small><b>.987</b><small>FPC</small></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="section demos-section" id="demos">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="section-index">04 / Controlled audio demos</p>
+            <h2>Listen across four lyric-edit operations.</h2>
+          </div>
+          <p>
+            Every example uses the same reference singing and target lyrics for
+            all systems. Highlighted characters show the requested edit.
+            Headphones are recommended.
+          </p>
+        </div>
+
+        <div class="task-filter" role="group" aria-label="Filter audio examples">
+          <button class="active" type="button" data-task="all">
+            <span>ALL</span>All 8 cases
+          </button>
+          <button type="button" data-task="keep_quantity_partial_changes">
+            <span>PSub</span>Partial substitution
+          </button>
+          <button type="button" data-task="keep_quantity_full_changes">
+            <span>FSub</span>Full substitution
+          </button>
+          <button type="button" data-task="decrease">
+            <span>Del</span>Deletion
+          </button>
+          <button type="button" data-task="increase">
+            <span>Ins</span>Insertion
+          </button>
+        </div>
+
+        <div class="case-list" id="case-list">
+          <p class="loading-state">Loading the offline audio manifest…</p>
+        </div>
+      </section>
+
+      <section class="section diagnostics-section">
+        <details>
+          <summary>
+            <span>05 / Analysis</span>
+            <strong>Open SCT mechanism and rollout diagnostics</strong>
+            <i>+</i>
+          </summary>
+          <div>
+            <figure class="paper-figure">
+              <button
+                class="figure-button"
+                type="button"
+                data-lightbox="./paper_assets/clasvs_fig4_mechanism_rollout.png"
+                data-alt="SCT mechanism and rollout diagnostics"
+              >
+                <img
+                  src="./paper_assets/clasvs_fig4_mechanism_rollout.png"
+                  alt="SCT mechanism and rollout diagnostics"
+                  loading="lazy"
+                />
+                <span>Open figure ↗</span>
+              </button>
+              <figcaption>
+                Figure 4. Paired route interventions, a frozen progress probe, and
+                failure rates by output-length quartile.
+              </figcaption>
+            </figure>
+            <p>
+              Semantic-state shuffling reduces target-text preference; raw-patch
+              shuffling harms melody continuity more. The frozen progress probe
+              recovers phonetic progress more accurately from semantic state than
+              from the raw acoustic predecessor.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <section class="release-note" aria-label="Research-use notice">
+        <div>
+          <p>Research demo</p>
+          <h2>Listen critically and use responsibly.</h2>
+        </div>
+        <p>
+          Audio excerpts are presented for non-commercial academic comparison.
+          Generated samples may contain synthetic singing voices and altered lyrics.
+          Rights in any underlying music remain with their respective rights holders.
+        </p>
+      </section>
+
+      <footer>
+        <div>
+          <a class="wordmark" href="#top"><span>CLA</span>SVS</a>
+          <p>
+            CLASVS: Continuous-Latent Autoregression for Melody-Preserving
+            Lyric Editing in Singing Voice Synthesis
+          </p>
+        </div>
+        <p>
+          Anonymous supplementary audio demonstrations.
+        </p>
+      </footer>
+    </main>
+
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" hidden>
+      <button type="button" id="lightbox-close">Close</button>
+      <img id="lightbox-image" alt="" />
+    </div>
+  </body>
+</html>
